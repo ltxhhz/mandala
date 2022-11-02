@@ -18,16 +18,46 @@ const config = {
     content: '\/\/\/\/\/\/\/\/\/\/\/\/',
     num: 6,
   }],
-  divide: 0.3
+  divide: 0.3,
+  bgColor: 'white',
+  color: 'black',
+  fontsize: 12,
+  bold: true,
+  rotationSpeed: 0.007
 }
 can.width = innerWidth
 can.height = innerHeight
 
-ctx.font = 'bold 12px Microsoft YaHei'
+//#region wallpaper engine config
+window.wallpaperPropertyListener = {
+  applyUserProperties: function (properties) {
+    console.log(properties);
+    if (properties.backgroundcolor) {
+      const color = wpGetInputColor(properties.backgroundcolor.value)
+      config.bgColor = color.str
+    }
+    if (properties.color) {
+      const color = wpGetInputColor(properties.color.value)
+      config.color = color.str
+    }
+    if (properties.fontsize) {
+      config.fontsize = properties.fontsize.value
+    }
+    if (properties.bold) {
+      config.bold = properties.bold.value
+    }
+    if (properties.rotationspeed) {
+      config.rotationSpeed = properties.rotationspeed.value
+    }
+    console.log(config);
+  },
+};
+//#endregion
 
 let i = 0
 
 function start(start) {
+  ctx.font = `${config.bold ? 'bold ' : ''}${config.fontsize}px Microsoft YaHei`
   let r1
   const end = Math.PI * 2 + start
   config.text.forEach((e, i) => {
@@ -41,7 +71,7 @@ function start(start) {
         radius: r,
       }, e.content.repeat(e.num), start, end - (Math.PI * 2 / (e.content.length * e.num)))
     } else {
-      const r = r1 + i * 40
+      const r = r1 + i * config.fontsize * 4
       const avg = Math.PI * 2 / e.num
       for (let i = 0; i < e.num; i++) {
         drawCircularText({
@@ -55,10 +85,18 @@ function start(start) {
 
 }
 (function animloop() {
-  ctx.clearRect(0, 0, can.width, can.height)
-  start(i+=0.001);
+  // ctx.clearRect(0, 0, can.width, can.height)
+  fillBg(config.bgColor)
+  start(i += config.rotationSpeed);
   requestAnimationFrame(animloop);
 })();
+
+function fillBg(color = 'white') {
+  ctx.save()
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, can.width, can.height)
+  ctx.restore()
+}
 
 //转换弧度
 function rads(x) {
@@ -95,4 +133,12 @@ function drawCircularText(s, string, startAngle, endAngle) {
     ctx.restore()
   }
   ctx.restore()
+}
+
+function wpGetInputColor(str) {
+  const arr = str.split(' ').map(e => Math.ceil(e * 255))
+  return {
+    arr,
+    str: `rgb(${arr})`
+  }
 }
